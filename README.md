@@ -19,7 +19,7 @@ make index REPO=/path/to/repo      # only (re)build the graph  -> .graph/<repo>-
 make generate REPO=/path/to/repo   # only regenerate outputs   -> output/<repo>/
 ```
 
-Options (call `.venv/bin/rev-tool generate --help`): `--out`, `--db-dir`, `--min-confidence` (default 0.9), `--max-depth`, `--no-ui`.
+Options (call `.venv/bin/python -m rev_tool generate --help`): `--out`, `--db-dir`, `--min-confidence` (default 0.9), `--max-depth`, `--no-ui`.
 
 ## Output
 
@@ -34,7 +34,7 @@ Secrets from `application.properties`/`yml` are never written to the output.
 
 ## Notes and limits
 
-- Requires Python 3.11+ only (`make build` uses `python3` and falls back to `pip3` when `python3` is missing; pass `PYTHON=/path/to/python3` if the default is older). With `build-pip`, `rev-tool` must be on PATH, or pass `REV=/full/path/to/rev-tool`.
+- Requires Python 3.11+ only (`make build` uses `python3` and falls back to `pip3` when `python3` is missing; pass `PYTHON=/path/to/python3` if the default is older). `make` runs `python -m rev_tool` with the venv's Python, or with the interpreter your `pip3` installs into, so `rev-tool` does not need to be on PATH.
 - Java calls are resolved from declared types of parameters, fields and locals (no compiler). Calls on JDK/library types are ignored; ambiguous overloads are matched by arity and argument types.
 - Outbound HTTP is detected for Feign, RestTemplate, WebClient, RestClient (Java) and axios (including `axios.create` instances) and `fetch` (React/TS).
 - React/TS calls are linked by URL + HTTP method, through relative imports, `@/` aliases, re-exports and object-literal API modules.

@@ -1,8 +1,8 @@
 PYTHON  ?= python3
 PIP     ?= pip3
 VENV    := .venv
-# use the venv's rev-tool when it exists, otherwise the one installed by pip3 on PATH
-REV     ?= $(if $(wildcard $(VENV)/bin/rev-tool),$(VENV)/bin/rev-tool,rev-tool)
+# runs `python -m rev_tool`: the venv's python, else the interpreter pip3 installs into (no PATH setup needed)
+REV     ?= $(shell sh find-python.sh $(PIP)) -m rev_tool
 OUT     ?= output
 
 .PHONY: build build-venv build-pip index generate all clean help
@@ -23,13 +23,12 @@ build-venv:
 	$(PYTHON) -m venv $(VENV)
 	$(VENV)/bin/pip install --quiet --upgrade pip
 	$(VENV)/bin/pip install --quiet -e .
-	@echo "ready: $(VENV)/bin/rev-tool"
+	@echo "ready: $(VENV)/bin/python -m rev_tool"
 
 # non-editable: old pip (<21.3) cannot do editable installs of pyproject-only projects; re-run after changing rev_tool/
 build-pip:
 	$(PIP) install --upgrade .
-	@command -v rev-tool >/dev/null 2>&1 || echo "note: rev-tool is not on PATH; add the scripts directory printed by '$(PIP) show -f rev-tool' to PATH, or run make with REV=/full/path/to/rev-tool"
-	@echo "ready: rev-tool"
+	@echo "ready: $(REV)"
 
 index generate all:
 	@test -n "$(REPO)" || (echo "usage: make $@ REPO=/path/to/repo" && exit 2)
