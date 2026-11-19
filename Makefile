@@ -36,9 +36,17 @@ build-pip:
 	@echo "ready: rev-tool"
 
 check-indexer:
-	@test -f $(JAR) || (echo "indexer jar missing; building..." && cd $(INDEXER) && ./install.sh)
+	@test -d "$(INDEXER)" || { echo "ERROR: reverselens indexer not found at $(INDEXER)."; \
+	  echo "  Clone/copy reverselens next to this folder or pass INDEXER=/path/to/reverselens/indexer"; exit 1; }
+	@test -f "$(JAR)" || { echo "indexer jar missing; building (needs Java 21+ and network on first run)..."; \
+	  command -v java >/dev/null 2>&1 || { echo "ERROR: java not found on PATH (Java 21+ required)"; exit 1; }; \
+	  (cd "$(INDEXER)" && ./gradlew shadowJar) || true; }
+	@test -f "$(JAR)" || { echo "ERROR: indexer jar still missing at $(JAR)."; \
+	  echo "  Build it manually: cd $(INDEXER) && ./gradlew shadowJar   (see the Gradle error above)"; \
+	  echo "  Or copy a prebuilt reverselens-indexer.jar to that path."; exit 1; }
 
 index generate all:
+	@test "$@" = generate || $(MAKE) --no-print-directory check-indexer
 	@test -n "$(REPO)" || (echo "usage: make $@ REPO=/path/to/repo" && exit 2)
 	$(REV) $@ "$(REPO)" $(if $(filter-out index,$@),--out "$(OUT)") --indexer-dir "$(INDEXER)"
 

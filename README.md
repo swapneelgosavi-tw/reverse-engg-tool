@@ -11,7 +11,7 @@ tree-sitter reads annotations, DTOs, messaging and data-store usage from source.
 ## Prerequisite: reverselens indexer
 
 This tool reuses the [reverselens](../reverselens) indexer (expected at `../reverselens/indexer`, or set `INDEXER=<dir>`) and
-does not bundle it. Linking React/TS calls written as root-relative URLs (`axios.get('/api/x')`) additionally needs
+does not bundle it. The indexer jar (`app/build/libs/reverselens-indexer.jar`) is not in git: `make build` builds it with `./gradlew shadowJar` (Java 21+, network on first run), or copy a prebuilt jar to that path. Linking React/TS calls written as root-relative URLs (`axios.get('/api/x')`) additionally needs
 `parsers/javascript/outbound.js` to honour `REV_INCLUDE_RELATIVE=1`; without that change those calls are simply not linked.
 
 ## Usage
