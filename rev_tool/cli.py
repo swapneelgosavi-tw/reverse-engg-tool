@@ -8,8 +8,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-TOOL_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_INDEXER = TOOL_DIR.parent / "reverselens" / "indexer"
+# Defaults are relative to the working directory (run from the tool folder, as `make` does), so they also hold
+# when the package is installed non-editably into site-packages.
+DEFAULT_INDEXER = Path("..") / "reverselens" / "indexer"
 
 
 def _indexer_dir(arg: str | None) -> Path:
@@ -82,10 +83,10 @@ def main(argv: list[str] | None = None) -> int:
                            ("all", "index, then generate")):
         sp = sub.add_parser(name, help=helptext)
         sp.add_argument("repo", type=Path)
-        sp.add_argument("--db-dir", type=Path, default=TOOL_DIR / ".graph")
+        sp.add_argument("--db-dir", type=Path, default=Path(".graph"))
         sp.add_argument("--indexer-dir", default=None, help="reverselens indexer directory")
         if name != "index":
-            sp.add_argument("--out", type=Path, default=TOOL_DIR / "output")
+            sp.add_argument("--out", type=Path, default=Path("output"))
             sp.add_argument("--min-confidence", type=float, default=0.9)
             sp.add_argument("--max-depth", type=int, default=14)
             sp.add_argument("--no-ui", action="store_true", help="skip React/TS caller linking")
