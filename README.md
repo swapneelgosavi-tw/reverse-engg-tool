@@ -17,7 +17,8 @@ does not bundle it. Linking React/TS calls written as root-relative URLs (`axios
 ## Usage
 
 ```bash
-make build                         # once: python venv + deps (+ indexer jar if missing)
+make build                         # once: venv if python3 exists, else falls back to pip3 (+ indexer jar if missing)
+make build-pip                     # pip3 only, no venv/python command (pip3 must belong to Python 3.11+)
 make all REPO=/path/to/repo        # index + generate
 make index REPO=/path/to/repo      # only (re)build the graph  -> .graph/<repo>-db
 make generate REPO=/path/to/repo   # only regenerate outputs   -> output/<repo>/
@@ -39,7 +40,7 @@ Secrets from `application.properties`/`yml` are never written to the output.
 
 ## Notes and limits
 
-- Requires Java 21+ and Node (for the indexer), and Python 3.11+ (`make build` uses `python3`; pass `PYTHON=/path/to/python3` if the default is older).
+- Requires Java 21+ and Node (for the indexer), and Python 3.11+ (`make build` uses `python3` and falls back to `pip3` when `python3` is missing; pass `PYTHON=/path/to/python3` if the default is older). With `build-pip`, `rev-tool` must be on PATH, or pass `REV=/full/path/to/rev-tool`.
 - React/TS calls are linked by URL + HTTP method. Root-relative calls (`axios.get('/api/x')`) are ingested by `rev_tool/jsext.py`
   because the packaged indexer drops them.
 - Branch labels (`alt`/`opt`) come from the source conditions; reflection, dynamic URLs and method references are not resolved.
