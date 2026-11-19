@@ -365,14 +365,16 @@ class Tracer:
             events: list[tuple[int, Any]] = []
             gid = self._gid(method)
             if gid:
-                for e in self.graph.calls_from.get(gid, []):
-                    if e.confidence < self.min_conf:
-                        continue
-                    item = self._call_item(cls, here, e, ctx)
-                    if item is not None:
-                        events.append((e.line, item))
-                for x in self.graph.ext_from.get(gid, []):
-                    events.append((x.line, self._http_item(here, x, ctx)))
+                edges: list[tuple[int, int, Any]] = [(e.line, e.seq, e) for e in self.graph.calls_from.get(gid, [])]
+                edges += [(x.line, x.seq, x) for x in self.graph.ext_from.get(gid, [])]
+                edges.sort(key=lambda t: (t[0], t[1]))
+                for line, _seq, e in edges:
+                    if isinstance(e, ExtCall):
+                        events.append((line, self._http_item(here, e, ctx)))
+                    elif e.confidence >= self.min_conf:
+                        item = self._call_item(cls, here, e, ctx)
+                        if item is not None:
+                            events.append((line, item))
             events += self._infra_items(method, here, ctx)
             events.sort(key=lambda t: t[0])
             return self._layout(events, self._structure(method))
@@ -587,7 +589,8 @@ class Tracer:
     # ------------------------------------------------------------------ HTTP
     def _http_item(self, here: Participant, x: ExtCall, ctx: _Ctx) -> Call:
         d = ctx.diagram
-        parsed = urlparse(x.url if "://" in x.url else "http://" + x.url.lstrip("/"))
+        url = re.sub(r"\$\{[^}]+\}", lambda mo: self._resolve_placeholder(mo.group(0)), x.url)
+        parsed = urlparse(url if "://" in url else "http://" + url.lstrip("/"))
         path = parsed.path or "/"
         target = self._resolve_endpoint(x.method, parsed.hostname or "", parsed.port, path)
         if target is not None:

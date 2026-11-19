@@ -3,44 +3,20 @@
 from __future__ import annotations
 
 import argparse
-import os
-import subprocess
 import sys
 from pathlib import Path
-
-# Defaults are relative to the working directory (run from the tool folder, as `make` does), so they also hold
-# when the package is installed non-editably into site-packages.
-DEFAULT_INDEXER = Path("..") / "reverselens" / "indexer"
-
-
-def _indexer_dir(arg: str | None) -> Path:
-    return Path(arg or os.environ.get("REV_INDEXER_DIR") or DEFAULT_INDEXER).resolve()
-
 
 def _db_path(repo: Path, db_dir: Path) -> Path:
     return db_dir.resolve() / f"{repo.name}-db"
 
 
-def cmd_index(repo: Path, db_dir: Path, indexer: Path) -> int:
-    jar = indexer / "app" / "build" / "libs" / "reverselens-indexer.jar"
-    if not jar.exists():
-        print(f"indexer jar not found: {jar}\nbuild it first: cd {indexer} && ./install.sh", file=sys.stderr)
-        return 2
-    db_dir.mkdir(parents=True, exist_ok=True)
-    # The indexer locates its JS parser relative to the working directory, so it must run from the indexer dir.
-    cmd = ["java", "-jar", str(jar), str(repo), "--db-path", str(db_dir.resolve())]
-    print("indexing:", repo)
-    rc = subprocess.run(cmd, cwd=indexer).returncode
-    if rc:
-        return rc
-    from .jsext import ingest
+def cmd_index(repo: Path, db_dir: Path) -> int:
+    from .indexer import build_graph
 
-    try:
-        n = ingest(repo, _db_path(repo, db_dir), indexer)
-        if n:
-            print(f"linked {n} React/TS outbound HTTP call(s)")
-    except Exception as exc:  # the backend graph is still usable without UI links
-        print(f"warning: React/TS outbound call ingestion failed: {exc}", file=sys.stderr)
+    print("indexing:", repo)
+    stats = build_graph(repo, _db_path(repo, db_dir))
+    print(f"indexed {stats['java_classes']} Java classes, {stats['js_modules']} JS/TS modules: "
+          f"{stats['calls']} calls, {stats['http_calls']} HTTP calls")
     return 0
 
 
@@ -84,7 +60,6 @@ def main(argv: list[str] | None = None) -> int:
         sp = sub.add_parser(name, help=helptext)
         sp.add_argument("repo", type=Path)
         sp.add_argument("--db-dir", type=Path, default=Path(".graph"))
-        sp.add_argument("--indexer-dir", default=None, help="reverselens indexer directory")
         if name != "index":
             sp.add_argument("--out", type=Path, default=Path("output"))
             sp.add_argument("--min-confidence", type=float, default=0.9)
@@ -96,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"not a directory: {repo}", file=sys.stderr)
         return 2
     if args.cmd in ("index", "all"):
-        rc = cmd_index(repo, args.db_dir, _indexer_dir(args.indexer_dir))
+        rc = cmd_index(repo, args.db_dir)
         if rc or args.cmd == "index":
             return rc
     return cmd_generate(repo, args.db_dir, args.out, args.min_confidence, args.max_depth, args.no_ui)

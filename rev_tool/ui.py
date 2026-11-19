@@ -1,4 +1,4 @@
-"""Link React/TypeScript callers to backend endpoints via the indexer's CALLS_EXTERNAL edges."""
+"""Link React/TypeScript callers to backend endpoints via the graph's CALLS_EXTERNAL edges."""
 
 from __future__ import annotations
 

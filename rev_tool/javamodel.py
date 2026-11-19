@@ -1,8 +1,7 @@
 """Source-level Java model built with tree-sitter.
 
-The Ladybug graph (from the reverselens indexer) gives resolved call edges, but it does not keep
-parameter annotations, annotation arrays, generic field types or Javadoc. This module recovers
-those facts straight from the source so request/response contracts can be built exactly.
+Recovers parameter annotations, annotation arrays, generic field types, Javadoc and method bodies
+straight from the source so request/response contracts and call edges can be built exactly.
 """
 
 from __future__ import annotations
