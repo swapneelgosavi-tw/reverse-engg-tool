@@ -2,6 +2,7 @@
 # Print the command that runs rev-tool: the venv's python, else the interpreter that pip3 installs into.
 # Usage: sh find-python.sh [pip-command]
 PIP="${1:-pip3}"
+export LC_ALL=C LANG=C  # BSD sed/awk fail with "illegal byte sequence" on binary or non-UTF-8 input
 ok() { [ -x "$1" ] || command -v "$1" >/dev/null 2>&1; }
 has_tool() { "$1" -c "import rev_tool, ladybug" >/dev/null 2>&1; }
 
@@ -10,7 +11,7 @@ if [ -x .venv/bin/python ]; then echo ".venv/bin/python"; exit 0; fi
 # the interpreter pip3 belongs to: shebang of the pip script, then the path in `pip --version`
 pipbin=$(command -v "$PIP" 2>/dev/null || echo "$PIP")
 cand=""
-if [ -f "$pipbin" ]; then
+if [ -f "$pipbin" ] && [ "$(head -c 2 "$pipbin" 2>/dev/null)" = "#!" ]; then  # skip compiled stubs
   she=$(head -1 "$pipbin" | sed -n 's/^#![[:space:]]*//p' | awk '{print $1}')
   case "$she" in */env) she=$(head -1 "$pipbin" | awk '{print $2}');; esac
   [ -n "$she" ] && cand="$she"
