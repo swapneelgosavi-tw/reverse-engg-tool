@@ -18,7 +18,7 @@ does not bundle it. Linking React/TS calls written as root-relative URLs (`axios
 
 ```bash
 make build                         # once: venv if python3 exists, else falls back to pip3 (+ indexer jar if missing)
-make build-pip                     # pip3 only, no venv/python command (pip3 must belong to Python 3.11+)
+make build-pip                     # pip3 only, no venv/python command (pip3 must belong to Python 3.11+); re-run after editing rev_tool/
 make all REPO=/path/to/repo        # index + generate
 make index REPO=/path/to/repo      # only (re)build the graph  -> .graph/<repo>-db
 make generate REPO=/path/to/repo   # only regenerate outputs   -> output/<repo>/

@@ -28,8 +28,9 @@ build-venv:
 	@$(MAKE) --no-print-directory check-indexer
 	@echo "ready: $(VENV)/bin/rev-tool"
 
+# non-editable: old pip (<21.3) cannot do editable installs of pyproject-only projects; re-run after changing rev_tool/
 build-pip:
-	$(PIP) install -e .
+	$(PIP) install --upgrade .
 	@$(MAKE) --no-print-directory check-indexer
 	@command -v rev-tool >/dev/null 2>&1 || echo "note: rev-tool is not on PATH; add the scripts directory printed by '$(PIP) show -f rev-tool' to PATH, or run make with REV=/full/path/to/rev-tool"
 	@echo "ready: rev-tool"
